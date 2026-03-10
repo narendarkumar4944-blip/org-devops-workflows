@@ -1,0 +1,19 @@
+name: Jira Ticket Validation
+
+on:
+  workflow_call:
+
+jobs:
+  jira-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Jira Ticket in PR Title
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+
+          if [[ ! $TITLE =~ [A-Z]+-[0-9]+ ]]; then
+            echo "❌ PR must contain Jira ticket like PROJ-123"
+            exit 1
+          fi
+
+          echo "✅ Jira ticket detected"

@@ -41,3 +41,4 @@ jobs:
             echo "No Jira ticket found in PR title"
             exit 1
           fi
+

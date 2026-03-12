@@ -19,10 +19,11 @@ jobs:
           JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
         run: |
 
+          echo "Using Jira URL: $JIRA_BASE_URL"
+
           PR_TITLE="${{ github.event.pull_request.title }}"
           echo "PR Title: $PR_TITLE"
 
-          # Extract Jira ticket
           if [[ "$PR_TITLE" =~ ([A-Z]+-[0-9]+) ]]; then
             TICKET="${BASH_REMATCH[1]}"
             echo "Found ticket: $TICKET"
@@ -31,12 +32,10 @@ jobs:
             exit 1
           fi
 
-          echo "Checking Jira ticket..."
-
           HTTP_STATUS=$(curl -s -o jira.json -w "%{http_code}" \
-            -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
             -H "Accept: application/json" \
-            "${JIRA_BASE_URL}/rest/api/3/issue/${TICKET}")
+            "$JIRA_BASE_URL/rest/api/3/issue/$TICKET")
 
           echo "HTTP Status: $HTTP_STATUS"
           cat jira.json

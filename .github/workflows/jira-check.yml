@@ -26,10 +26,13 @@ jobs:
             TICKET="${BASH_REMATCH[1]}"
             echo "Found ticket: $TICKET"
 
-            HTTP_STATUS=$(curl -s -o jira.json -w "%{http_code}" \
-              -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+            curl -s -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
               -H "Content-Type: application/json" \
-              "${JIRA_BASE_URL}/rest/api/3/issue/${TICKET}" | tr -d '\n')
+              -o jira.json \
+              -w "%{http_code}" \
+              "${JIRA_BASE_URL}/rest/api/3/issue/${TICKET}" > status.txt
+
+            HTTP_STATUS=$(cat status.txt | tr -d '\r\n')
 
             echo "HTTP Status from Jira: $HTTP_STATUS"
 
@@ -46,5 +49,3 @@ jobs:
             echo "No Jira ticket found in PR title"
             exit 1
           fi
-
-          

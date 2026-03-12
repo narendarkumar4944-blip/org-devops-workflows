@@ -33,24 +33,18 @@ jobs:
 
           echo "Checking Jira ticket..."
 
-          # Encode email:token for Basic Auth
-          AUTH=$(echo -n "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" | base64)
-
-          HTTP_STATUS=$(curl -s \
-            -H "Authorization: Basic $AUTH" \
+          HTTP_STATUS=$(curl -s -o jira.json -w "%{http_code}" \
+            -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
             -H "Accept: application/json" \
-            -o jira.json \
-            -w "%{http_code}" \
             "${JIRA_BASE_URL}/rest/api/3/issue/${TICKET}")
 
-          echo "HTTP Status from Jira: $HTTP_STATUS"
+          echo "HTTP Status: $HTTP_STATUS"
+          cat jira.json
 
           if [[ "$HTTP_STATUS" == "200" ]]; then
             SUMMARY=$(jq -r '.fields.summary' jira.json)
             echo "✅ Valid Jira ticket: $TICKET - $SUMMARY"
           else
-            echo "❌ Jira ticket not valid or authentication failed"
-            echo "Jira Response:"
-            cat jira.json
+            echo "❌ Jira ticket not valid"
             exit 1
           fi

@@ -1,19 +1,43 @@
-name: Jira Ticket Validation
+name: Require Jira Ticket in PR Title
 
 on:
-  workflow_call:
+  pull_request:
+    types: [opened, edited, synchronize]
 
 jobs:
-  jira-check:
+  validate-jira:
     runs-on: ubuntu-latest
-    steps:
-      - name: Validate Jira Ticket in PR Title
-        run: |
-          TITLE="${{ github.event.pull_request.title }}"
 
-          if [[ ! $TITLE =~ [A-Z]+-[0-9]+ ]]; then
-            echo "❌ PR must contain Jira ticket like PROJ-123"
+    steps:
+      - name: Check Jira ticket in PR title
+        env:
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+        run: |
+
+          PR_TITLE="${{ github.event.pull_request.title }}"
+
+          echo "PR Title: $PR_TITLE"
+
+          if [[ $PR_TITLE =~ ([A-Z]+-[0-9]+) ]]; then
+            TICKET="${BASH_REMATCH[1]}"
+            echo "Found ticket: $TICKET"
+
+            HTTP_STATUS=$(curl -s -o jira.json -w "%{http_code}" \
+              -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              "${JIRA_BASE_URL}/rest/api/3/issue/${TICKET}")
+
+            if [[ "$HTTP_STATUS" == "200" ]]; then
+              SUMMARY=$(jq -r '.fields.summary' jira.json)
+              echo "Valid Jira ticket: $TICKET - $SUMMARY"
+            else
+              echo "Jira ticket not valid"
+              exit 1
+            fi
+
+          else
+            echo "No Jira ticket found in PR title"
             exit 1
           fi
-
-          echo "✅ Jira ticket detected"

@@ -11,9 +11,9 @@ jobs:
     steps:
       - name: Check Jira ticket in PR title
         env:
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: "narendarkumar4944@gmail.com"
+          JIRA_API_TOKEN: "TATT3xFfGF0KFKBGu3iiGuuZVU3EDe-iGd-0Uk1-a4nTczSNmJiBL1K1OYhAaVifN1aJ54RPY97CQro9kvq0tts6p6gvHqBBz5BrEcmIy5aXwXG7xv7y0I0v3ylcdANKiR6h30EEV2zmE28giq2XEXokGNWxybO0wlHVDRrY3IUP-RG6gR-h14=AAD74724"
+          JIRA_BASE_URL: "https://narendarkumar4944.atlassian.net"
         run: |
 
           PR_TITLE="${{ github.event.pull_request.title }}"

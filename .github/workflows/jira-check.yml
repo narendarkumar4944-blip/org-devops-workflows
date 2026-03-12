@@ -12,12 +12,11 @@ jobs:
       - name: Check Jira ticket in PR title
         env:
           JIRA_USER_EMAIL: "narendarkumar4944@gmail.com"
-          JIRA_API_TOKEN: "TATT3xFfGF0KFKBGu3iiGuuZVU3EDe-iGd-0Uk1-a4nTczSNmJiBL1K1OYhAaVifN1aJ54RPY97CQro9kvq0tts6p6gvHqBBz5BrEcmIy5aXwXG7xv7y0I0v3ylcdANKiR6h30EEV2zmE28giq2XEXokGNWxybO0wlHVDRrY3IUP-RG6gR-h14=AAD74724"
+          JIRA_API_TOKEN: "YOUR_TOKEN"
           JIRA_BASE_URL: "https://narendarkumar4944.atlassian.net"
         run: |
 
           PR_TITLE="${{ github.event.pull_request.title }}"
-
           echo "PR Title: $PR_TITLE"
 
           if [[ $PR_TITLE =~ ([A-Z]+-[0-9]+) ]]; then
@@ -27,13 +26,16 @@ jobs:
             HTTP_STATUS=$(curl -s -o jira.json -w "%{http_code}" \
               -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
               -H "Content-Type: application/json" \
-              "${JIRA_BASE_URL}/rest/api/3/issue/${TICKET}")
+              "${JIRA_BASE_URL}/rest/api/3/issue/${TICKET}" | tr -d '\n')
 
-            if [[ "$HTTP_STATUS" == "200" ]]; then
+            echo "HTTP Status from Jira: $HTTP_STATUS"
+
+            if [ "$HTTP_STATUS" = "200" ]; then
               SUMMARY=$(jq -r '.fields.summary' jira.json)
               echo "Valid Jira ticket: $TICKET - $SUMMARY"
             else
               echo "Jira ticket not valid"
+              cat jira.json
               exit 1
             fi
 
@@ -41,4 +43,3 @@ jobs:
             echo "No Jira ticket found in PR title"
             exit 1
           fi
-

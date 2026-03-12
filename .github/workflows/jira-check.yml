@@ -22,30 +22,30 @@ jobs:
           PR_TITLE="${{ github.event.pull_request.title }}"
           echo "PR Title: $PR_TITLE"
 
-          if [[ $PR_TITLE =~ ([A-Z]+-[0-9]+) ]]; then
+          # Extract Jira ticket
+          if [[ "$PR_TITLE" =~ ([A-Z]+-[0-9]+) ]]; then
             TICKET="${BASH_REMATCH[1]}"
             echo "Found ticket: $TICKET"
-
-            curl -s -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -o jira.json \
-              -w "%{http_code}" \
-              "${JIRA_BASE_URL}/rest/api/3/issue/${TICKET}" > status.txt
-
-            HTTP_STATUS=$(cat status.txt | tr -d '\r\n')
-
-            echo "HTTP Status from Jira: $HTTP_STATUS"
-
-            if [ "$HTTP_STATUS" = "200" ]; then
-              SUMMARY=$(jq -r '.fields.summary' jira.json)
-              echo "Valid Jira ticket: $TICKET - $SUMMARY"
-            else
-              echo "Jira ticket not valid"
-              cat jira.json
-              exit 1
-            fi
-
           else
-            echo "No Jira ticket found in PR title"
+            echo "❌ No Jira ticket found in PR title"
+            exit 1
+          fi
+
+          echo "Checking Jira ticket..."
+
+          HTTP_STATUS=$(curl -s -o jira.json -w "%{http_code}" \
+            -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            "${JIRA_BASE_URL}/rest/api/3/issue/${TICKET}")
+
+          echo "HTTP Status from Jira: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" = "200" ]; then
+            SUMMARY=$(jq -r '.fields.summary' jira.json)
+            echo "✅ Valid Jira ticket: $TICKET - $SUMMARY"
+          else
+            echo "❌ Jira ticket not valid or not accessible"
+            echo "Response from Jira:"
+            cat jira.json
             exit 1
           fi

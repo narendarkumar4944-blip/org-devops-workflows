@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Check Jira ticket in PR title
         env:
           JIRA_USER_EMAIL: "narendarkumar4944@gmail.com"
